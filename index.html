@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan Maestro de Desarrollo Económico | Municipio Tinaquillo</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <!-- Three.js CDN para gráficos 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --bg-dark: #0B1120;
+            --card-bg: rgba(30, 41, 59, 0.5);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --primary: #10B981;
+            --primary-glow: rgba(16, 185, 129, 0.4);
+            --accent: #06B6D4;
+            --gold: #F59E0B;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        /* Canvas 3D de fondo */
+        #canvas3d {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Contenedor principal */
+        .app-container {
+            position: relative;
+            z-index: 1;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header / Hero */
+        header {
+            text-align: center;
+            padding: 4rem 1rem 3rem 1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1.2rem;
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--primary);
+            border-radius: 50px;
+            color: var(--primary);
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        h1 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            line-height: 1.1;
+            background: linear-gradient(135deg, #FFFFFF 0%, #94A3B8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 800px;
+            margin: 0 auto 2.5rem auto;
+            line-height: 1.6;
+        }
+
+        /* KPIs Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .kpi-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3), 0 0 15px var(--primary-glow);
+        }
+
+        .kpi-card .val {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.3rem;
+        }
+
+        .kpi-card .label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Tabs de Navegación */
+        .tabs-nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2.5rem;
+        }
+
+        .tab-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .tab-btn:hover, .tab-btn.active {
+            background: var(--primary);
+            color: #000;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        /* Contenido de Tabs */
+        .tab-content {
+            display: none;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 3rem;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            color: var(--text-main);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        /* Tablas */
+        .custom-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            text-align: left;
+        }
+
+        .custom-table th, .custom-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .custom-table th {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--accent);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .custom-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* Costo de Oportunidad Boxes */
+        .cop-cos-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .box-cop {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 1.2rem;
+        }
+
+        .box-cos {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 1.2rem;
+        }
+
+        .box-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .box-cop .box-title { color: #EF4444; }
+        .box-cos .box-title { color: #F59E0B; }
+
+        /* Footer CTA */
+        footer {
+            text-align: center;
+            padding: 3rem 1rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .btn-cta {
+            display: inline-block;
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+            color: #000;
+            font-weight: 800;
+            border-radius: 50px;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 20px var(--primary-glow);
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        .btn-cta:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px var(--primary-glow);
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2.3rem; }
+            .cop-cos-grid { grid-template-columns: 1fr; }
+            .tabs-nav { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Canvas 3D de Fondo -->
+    <canvas id="canvas3d"></canvas>
+
+    <div class="app-container">
+        <!-- Hero Header -->
+        <header>
+            <div class="badge">Ecosistema de Libre Mercado & Exportación</div>
+            <h1>Plan Maestro de Desarrollo Económico<br><span>Municipio Tinaquillo</span></h1>
+            <p class="subtitle">Estrategia territorial fundamentada en economía de mercado, atracción de inversiones, régimen tributario simplificado y reactivación de la Zona Industrial.</p>
+        </header>
+
+        <!-- KPIs Metricas -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="val">1.0%</div>
+                <div class="label">Tasa Plana (Flat Tax)</div>
+            </div>
+            <div class="kpi-card">
+                <div class="val">+8,500</div>
+                <div class="label">Empleos Directos</div>
+            </div>
+            <div class="kpi-card">
+                <div class="val">$6.85M</div>
+                <div class="label">Inversión Estimada</div>
+            </div>
+            <div class="kpi-card">
+                <div class="val">$18.57x</div>
+                <div class="label">SROI (Retorno Social)</div>
+            </div>
+        </div>
+
+        <!-- Navegación por Pestañas -->
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="openTab(event, 'diag')">1. Diagnóstico & Fiscalidad</button>
+            <button class="tab-btn" onclick="openTab(event, 'catastro')">2. Catastro Industrial</button>
+            <button class="tab-btn" onclick="openTab(event, 'actores')">3. Mapeo de Actores</button>
+            <button class="tab-btn" onclick="openTab(event, 'singapur')">4. Modelo Singapur</button>
+            <button class="tab-btn" onclick="openTab(event, 'presupuesto')">5. Presupuesto & ROI</button>
+        </div>
+
+        <!-- TAB 1: DIAGNÓSTICO -->
+        <div id="diag" class="tab-content active">
+            <h2>Diagnóstico Estructural y Reforma Tributaria</h2>
+            <p>El Municipio Tinaquillo presenta un entorno distorsionado por presiones fiscales coercitivas que han elevado la informalidad comercial a niveles entre <strong>48% y 52%</strong>. La propuesta busca la sustitución del esquema tributario actual por un régimen de <em>Flat Tax</em> automatizado.</p>
+            
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Indicador Tributario</th>
+                        <th>Situación Actual</th>
+                        <th>Meta con Libre Mercado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Informalidad Comercial</td>
+                        <td>48.0% - 52.0%</td>
+                        <td>&lt; 15.0%</td>
+                    </tr>
+                    <tr>
+                        <td>Alícuota Promedio de Actividad Económica</td>
+                        <td>3.5% - 6.5%</td>
+                        <td>1.0% (Tasa Plana)</td>
+                    </tr>
+                    <tr>
+                        <td>Emisión de Licencias Comerciales</td>
+                        <td>45 - 90 días</td>
+                        <td>&lt; 24 horas (Digital)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="cop-cos-grid">
+                <div class="box-cop">
+                    <div class="box-title"><span>⚠️</span> Costo de Oportunidad Privado (COP)</div>
+                    <p>Pérdida directa del 18% al 28% del margen neto en tributos y costos de cumplimiento normativo, forzando la migración a la informalidad o el traslado de operaciones a Valencia.</p>
+                </div>
+                <div class="box-cos">
+                    <div class="box-title"><span>🛑</span> Costo de Oportunidad Social (COS)</div>
+                    <p>Erosión de la base tributaria municipal, imposibilidad de financiar servicios de salud e infraestructura y salarios de subsistencia precarizados.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: CATASTRO -->
+        <div id="catastro" class="tab-content">
+            <h2>Catastro y Componentes Geográficos</h2>
+            <p>Ubicación estratégica en las coordenadas 9°55'19"N y 68°17'26"W, conectada directamente a la carretera Troncal 5. Actualmente se registra un **65% de capacidad instalada ociosa** en la Zona Industrial de Tinaquillo.</p>
+
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Activo Industrial / Sector</th>
+                        <th>Estado Actual</th>
+                        <th>Uso Potencial (Libre Mercado)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Parcela 27 (Zona Industrial)</td>
+                        <td>Parcialmente inactiva</td>
+                        <td>Clúster de Transformación de Minerales (Feldespato/Sílice)</td>
+                    </tr>
+                    <tr>
+                        <td>Galpones 43 y 44 (Parcela 39-B)</td>
+                        <td>Inactivos / En custodia</td>
+                        <td>Centro Logístico de Empaque Exportable</td>
+                    </tr>
+                    <tr>
+                        <td>Planta FEME Tinaquillo</td>
+                        <td>Operación marginal</td>
+                        <td>Ensamblaje Metalmecánico / Componentes Livianos</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TAB 3: ACTORES -->
+        <div id="actores" class="tab-content">
+            <h2>Mapeo de Actores y Stakeholders</h2>
+            <p>La gobernanza del plan maestro requiere la integración público-privada, académica y gremial para blindar la seguridad jurídica y la sostenibilidad del ecosistema local.</p>
+
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Categoría</th>
+                        <th>Institución / Organización</th>
+                        <th>Rol Estratégico</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Gremial Empresarial</td>
+                        <td>Fedecámaras Cojedes / Cámara de Comercio</td>
+                        <td>Promoción de inversiones y defensa de la propiedad privada.</td>
+                    </tr>
+                    <tr>
+                        <td>Academia e Investigación</td>
+                        <td>UNELLEZ (VIPI / INSITEZ) & Universidad de Carabobo</td>
+                        <td>Adaptación curricular y sistema dual de pasantías e investigación.</td>
+                    </tr>
+                    <tr>
+                        <td>Sector Salud / Servicios</td>
+                        <td>Hospital General "Joaquina de Rotondaro"</td>
+                        <td>Alianzas público-privadas para optimización del capital humano.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- TAB 4: MODELO SINGAPUR -->
+        <div id="singapur" class="tab-content">
+            <h2>Propuesta Piloto Exportadora (Estilo Singapur)</h2>
+            <p>Transformación territorial de Tinaquillo aprovechando sus ventajas comparativas (yacimientos de feldespato/sílice y conectividad logística) y ventajas competitivas (tradición manufacturera e infraestructura instalada).</p>
+
+            <div class="cop-cos-grid">
+                <div class="box-cop" style="background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3);">
+                    <div class="box-title" style="color: var(--primary);"><span>🚀</span> Fase 1 & 2: Desburocratización y Concesiones</div>
+                    <p>Reforma fiscal con Tasa Plana del 1.0%, ventanilla digital en 24 horas y licitación internacional para la concesión de galpones industriales ociosos.</p>
+                </div>
+                <div class="box-cos" style="background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.3);">
+                    <div class="box-title" style="color: var(--accent);"><span>🌐</span> Fase 3 & 4: Zona Librecambista & Vouchers</div>
+                    <p>Exención total de aranceles locales para insumos exportables e implementación del sistema de vouchers educativos y técnicos para jóvenes.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 5: PRESUPUESTO -->
+        <div id="presupuesto" class="tab-content">
+            <h2>Estimación Presupuestaria y Evaluación Financiera</h2>
+            <p>El plan presupone un modelo de apalancamiento mediante inversión privada (65%) y alianzas público-privadas (35%).</p>
+
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Iniciativa</th>
+                        <th>Costo Estimado (USD)</th>
+                        <th>Fuente de Financiamiento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Plataforma Digital "Tinaquillo Express"</td>
+                        <td>$150,000</td>
+                        <td>Presupuesto Municipal / Cooperación</td>
+                    </tr>
+                    <tr>
+                        <td>Rehabilitación Vial e Iluminación ZI</td>
+                        <td>$2,800,000</td>
+                        <td>Alianza Público-Privada (APP)</td>
+                    </tr>
+                    <tr>
+                        <td>Infraestructura Hídrica Industrial</td>
+                        <td>$1,200,000</td>
+                        <td>Consorcio Privado de la Zona Industrial</td>
+                    </tr>
+                    <tr>
+                        <td>Programa de Vouchers Técnicos</td>
+                        <td>$850,000</td>
+                        <td>Aporte Empresarial (80%) / Fondo Público (20%)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>TOTAL ESTIMADO</strong></td>
+                        <td><strong>$6,850,000</strong></td>
+                        <td><strong>65% Privado / 35% APP</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer CTA con Descarga Real -->
+        <footer>
+    <p>Plan Maestro de Desarrollo Económico del Municipio Tinaquillo, Estado Cojedes.</p>
+    <a href="Plan_Economico_Tinaquillo_V2.pdf" download="Plan_Economico_Tinaquillo_V2.pdf" class="btn-cta">
+        Descargar Informe Ejecutivo (PDF)
+    </a>
+        </footer>
+    </div>
+
+    <!-- Script de Navegación e Interactividad 3D -->
+    <script>
+        // Lógica de Tabs
+        function openTab(evt, tabName) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tab-btn");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // Gráficos 3D con Three.js
+        const canvas = document.getElementById('canvas3d');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        // Crear Nube Nodal 3D
+        const geometry = new THREE.BufferGeometry();
+        const count = 150;
+        const positions = new Float32Array(count * 3);
+
+        for (let i = 0; i < count * 3; i++) {
+            positions[i] = (Math.random() - 0.5) * 15;
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+        const material = new THREE.PointsMaterial({
+            size: 0.05,
+            color: 0x10B981,
+            transparent: true,
+            opacity: 0.8
+        });
+
+        const points = new THREE.Points(geometry, material);
+        scene.add(points);
+
+        // Geometría flotante central
+        const shapeGeo = new THREE.IcosahedronGeometry(2, 1);
+        const shapeMat = new THREE.MeshBasicMaterial({
+            color: 0x06B6D4,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.15
+        });
+        const mesh = new THREE.Mesh(shapeGeo, shapeMat);
+        scene.add(mesh);
+
+        camera.position.z = 5;
+
+        // Mouse interaction
+        let mouseX = 0;
+        let mouseY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth - 0.5) * 0.5;
+            mouseY = (e.clientY / window.innerHeight - 0.5) * 0.5;
+        });
+
+        // Loop de animación
+        function animate() {
+            requestAnimationFrame(animate);
+
+            mesh.rotation.x += 0.002;
+            mesh.rotation.y += 0.003;
+
+            points.rotation.y += 0.0005;
+
+            camera.position.x += (mouseX - camera.position.x) * 0.05;
+            camera.position.y += (-mouseY - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Responsive resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
